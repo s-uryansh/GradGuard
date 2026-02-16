@@ -1,0 +1,26 @@
+{
+  "session_id": "__1_33196-1771241601863150644",
+  "remote_addr": "[::1]:33196",
+  "start_time": "2026-02-16T11:33:21Z",
+  "end_time": "2026-02-16T11:34:41Z",
+  "duration_seconds": 79.630433349,
+  "total_commands": 12,
+  "final_suspicion_score": 100,
+  "verdict": "likely_fingerprinting",
+  "category_breakdown": {
+    "exploit": 0,
+    "fingerprint": 8,
+    "recon": 1,
+    "unknown": 3
+  },
+  "flagged_commands": [
+    "cat /proc/1/cgroupls /.dockerenvsystemd-detect-virtcat /proc/self/cgroupdmeesgcat /proc/cpuinfo^C",
+    "cat /proc/1/cgroup",
+    "ls /.dockerenv",
+    "systemd-detect-virt",
+    "cat /proc/self/cgroup",
+    "dmesg",
+    "cat /proc/cpuinfo",
+    "cat /proc/1/cgroup      # should now look like bare metal"
+  ]
+}

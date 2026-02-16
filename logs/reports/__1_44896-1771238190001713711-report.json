@@ -1,0 +1,20 @@
+{
+  "session_id": "__1_44896-1771238190001713711",
+  "remote_addr": "[::1]:44896",
+  "start_time": "2026-02-16T10:36:30Z",
+  "end_time": "2026-02-16T10:37:32Z",
+  "duration_seconds": 62.931763031,
+  "total_commands": 8,
+  "final_suspicion_score": 93,
+  "verdict": "likely_fingerprinting",
+  "category_breakdown": {
+    "exploit": 0,
+    "fingerprint": 2,
+    "recon": 3,
+    "unknown": 3
+  },
+  "flagged_commands": [
+    "cat /proc/1/cgroup",
+    "ls /.dockerenv"
+  ]
+}
