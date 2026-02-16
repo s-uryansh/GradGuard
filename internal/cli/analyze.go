@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"GradGuard/internal/ml"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -60,6 +61,15 @@ func ShowSummary() {
 	printTopFlaggedCommands(reports)
 	printDetectionBreakdown(detections)
 	printSessionList(reports)
+	bold.Println("  ┌─ ML MODEL EVALUATION ──────────────────────────────────────┐")
+	model := ml.NewModel()
+	trainAcc, testAcc, cm := model.Train()
+	fmt.Printf("  │  Training accuracy : %.1f%%\n", trainAcc*100)
+	fmt.Printf("  │  Test accuracy     : %.1f%%\n", testAcc*100)
+	bold.Println("  └────────────────────────────────────────────────────────────┘")
+	metrics := ml.ComputeMetrics(cm)
+	ml.PrintMetrics(metrics)
+	cm.Print()
 }
 
 func printBanner() {

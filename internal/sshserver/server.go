@@ -13,6 +13,7 @@ func Start(addr string) {
 	}
 
 	config.AddHostKey(generateHostKey())
+	config.ServerVersion = "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6"
 
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {

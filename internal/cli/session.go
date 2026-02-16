@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"GradGuard/internal/ml"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -28,6 +29,13 @@ type detectionEvent struct {
 	CommandIndex   int    `json:"command_index"`
 	TriggerCommand string `json:"trigger_command"`
 	ResponseTaken  string `json:"response_taken"`
+}
+
+func boolLabel(b bool) string {
+	if b {
+		return red.Sprintf("YES")
+	}
+	return green.Sprintf("NO")
 }
 
 func ShowSession(sessionID string) {
@@ -77,6 +85,24 @@ func ShowSession(sessionID string) {
 		bold.Println("  └───────────────────────────────────────────────────────────┘")
 		fmt.Println()
 	}
+
+	bold.Println("  ┌─ ML ANALYSIS ─────────────────────────────────────────────┐")
+	model := ml.NewModel()
+	trainAcc, testAcc, _ := model.Train()
+	fmt.Printf("  │  Model trained  train:%.1f%%  test:%.1f%%\n",
+		trainAcc*100, testAcc*100)
+
+	sample, err := ml.ExtractFromLogs(sessionID)
+	if err == nil {
+		pred := model.Predict(sample.Features)
+		fmt.Printf("  │  Fingerprinting : %s (prob: %.2f)\n",
+			boolLabel(pred.IsFingerprinting), pred.IsFingerprintingProb)
+		fmt.Printf("  │  Intent         : %s\n", pred.Intent)
+		fmt.Printf("  │  Anomaly        : %s (score: %.3f)\n",
+			boolLabel(pred.IsAnomaly), pred.AnomalyScore)
+	}
+	bold.Println("  └───────────────────────────────────────────────────────────┘")
+	fmt.Println()
 
 	bold.Println("  ┌─ COMMAND TIMELINE ──────────────────────────────────────────────────┐")
 	for _, cmd := range commands {
