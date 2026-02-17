@@ -1,4 +1,3 @@
-// internal/ml/dataset.go
 package ml
 
 import (
@@ -8,6 +7,64 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+type externalSample struct {
+	Features SessionFeatures `json:"features"`
+	Label    int             `json:"label"`
+	Source   string          `json:"source"`
+}
+
+func LoadExternalDataset() []LabeledSample {
+	f, err := os.Open("Dataset/training_samples.json")
+	if err != nil {
+		rng := rand.New(rand.NewSource(42))
+		return GenerateSyntheticData(rng)
+	}
+	defer f.Close()
+
+	var ext []externalSample
+	if err := json.NewDecoder(f).Decode(&ext); err != nil {
+		rng := rand.New(rand.NewSource(42))
+		return GenerateSyntheticData(rng)
+	}
+
+	counts := map[int]int{}
+	var samples []LabeledSample
+	for _, e := range ext {
+		samples = append(samples, LabeledSample{
+			Features: e.Features,
+			Label:    e.Label,
+		})
+		counts[e.Label]++
+	}
+
+	// top up fingerprinting + exploit with synthetic (not in external data)
+	maxCount := 0
+	for _, c := range counts {
+		if c > maxCount {
+			maxCount = c
+		}
+	}
+	targetSynthetic := maxCount / 2
+	if targetSynthetic < 200 {
+		targetSynthetic = 200
+	}
+
+	rng := rand.New(rand.NewSource(42))
+	synthetic := GenerateSyntheticData(rng)
+	fpAdded, exAdded := 0, 0
+	for _, s := range synthetic {
+		if s.Label == LabelFingerprinting && fpAdded < targetSynthetic {
+			samples = append(samples, s)
+			fpAdded++
+		} else if s.Label == LabelExploit && exAdded < targetSynthetic {
+			samples = append(samples, s)
+			exAdded++
+		}
+	}
+
+	return samples
+}
 
 func GenerateSyntheticData(rng *rand.Rand) []LabeledSample {
 	var samples []LabeledSample

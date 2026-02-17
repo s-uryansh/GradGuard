@@ -1,0 +1,1 @@
+The analyze command. Loads all report and detection JSON files, sorts by recency, prints the ASCII banner, summary stats, top flagged commands, detection breakdown, session list. Then trains the ML model and prints accuracy, per-class metrics, and the confusion matrix.

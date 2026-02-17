@@ -30,7 +30,6 @@ type DetectionEvent struct {
 	ResponseTaken  string     `json:"response_taken"`
 }
 
-// ThresholdSignal fires when suspicion score crosses 50, 75, 100
 type ThresholdSignal struct {
 	firedAt50  bool
 	firedAt75  bool
@@ -73,7 +72,6 @@ func (t *ThresholdSignal) Check(session *sshsession.SessionState, cmd string) *D
 	return nil
 }
 
-// SequenceSignal fires when 3+ fingerprint commands appear in a row
 type SequenceSignal struct {
 	consecutiveFingerprints int
 	fired                   bool
@@ -99,14 +97,12 @@ func (s *SequenceSignal) Check(session *sshsession.SessionState, cmd string, cat
 	return nil
 }
 
-// TimingSignal fires when median delay between last 5 commands is under 300ms
 type TimingSignal struct {
 	recentDelays []int64
 	fired        bool
 }
 
 func (t *TimingSignal) Check(session *sshsession.SessionState, cmd string, delayMs int64) *DetectionEvent {
-	// ignore system events and very first command
 	if delayMs == 0 {
 		return nil
 	}
@@ -116,12 +112,10 @@ func (t *TimingSignal) Check(session *sshsession.SessionState, cmd string, delay
 		t.recentDelays = t.recentDelays[len(t.recentDelays)-5:]
 	}
 
-	// need at least 5 samples
 	if len(t.recentDelays) < 5 {
 		return nil
 	}
 
-	// reset if there's a long pause — human resumed typing
 	for _, d := range t.recentDelays {
 		if d > 5000 {
 			t.recentDelays = nil
@@ -144,7 +138,6 @@ func (t *TimingSignal) Check(session *sshsession.SessionState, cmd string, delay
 }
 
 func medianDelay(delays []int64) int64 {
-	// simple median — copy and sort
 	sorted := make([]int64, len(delays))
 	copy(sorted, delays)
 	for i := 0; i < len(sorted); i++ {

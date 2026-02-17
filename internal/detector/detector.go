@@ -26,30 +26,24 @@ func New(session *sshsession.SessionState) *Detector {
 	}
 }
 
-// Check runs all three signals after every command
-// returns all events that fired (usually 0 or 1, rarely more)
 func (d *Detector) Check(cmd string, category string, delayMs int64) []DetectionEvent {
 	var events []DetectionEvent
 
-	// signal 1 — threshold
 	if e := d.threshold.Check(d.session, cmd); e != nil {
 		e.ResponseTaken = Execute(d.container, e.Confidence)
 		events = append(events, d.finalize(*e))
 	}
 
-	// signal 2 — sequence
 	if e := d.sequence.Check(d.session, cmd, category); e != nil {
 		e.ResponseTaken = Execute(d.container, ConfidenceCritical)
 		events = append(events, d.finalize(*e))
 	}
 
-	// signal 3 — timing
 	if e := d.timing.Check(d.session, cmd, delayMs); e != nil {
 		e.ResponseTaken = Execute(d.container, e.Confidence)
 		events = append(events, d.finalize(*e))
 	}
 
-	// write any events to detections file
 	for _, event := range events {
 		writeDetection(d.session.ID, event)
 	}

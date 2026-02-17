@@ -1,0 +1,1 @@
+Computes precision, recall, F1, and support for each class. Prints macro average. Used in the CLI analyze output.

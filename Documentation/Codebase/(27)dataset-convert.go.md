@@ -1,0 +1,1 @@
+Standalone converter reads ssh_anomaly_dataset.csv and brute_force_data.json, groups rows into sessions by IP + 5-minute time window, extracts the 12-feature vector from each session, maps labels to integers, writes everything to Dataset/training_samples.json.

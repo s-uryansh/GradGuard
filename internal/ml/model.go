@@ -33,9 +33,7 @@ func NewModel() *Model {
 func (m *Model) Train() (trainAcc, testAcc float64, cm *ConfusionMatrix) {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	synthetic := GenerateSyntheticData(rng)
-	real := LoadRealSamples()
-	all := append(synthetic, real...)
+	all := LoadExternalDataset()
 
 	normalized, mins, maxs := NormalizeSamples(all)
 	m.FeatureMins = mins

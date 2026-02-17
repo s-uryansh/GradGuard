@@ -1,0 +1,1 @@
+Distance-based anomaly detector. Computes the centroid of all legitimate training samples in 12-dimensional feature space. Sets threshold at mean distance + 2 standard deviations. Any session further from the centroid than the threshold is flagged as anomalous

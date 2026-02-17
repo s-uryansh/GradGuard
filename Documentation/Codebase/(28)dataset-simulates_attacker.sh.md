@@ -1,0 +1,1 @@
+Bash script that connects to the running honeypot 20 times as a fingerprinting attacker and 20 times as an exploit attacker, using sshpass to automate authentication. Generates real labeled sessions that feed back into training.

@@ -1,0 +1,1 @@
+The `analyze --session` command. Shows deep detail for one session — IP geolocation intel, category breakdown, detection events with responses, ML prediction (fingerprinting probability, intent label, anomaly score), and the full command timeline with per-command category, suspicion score, delay, and reason.

@@ -19,9 +19,7 @@ func Handle(channel ssh.Channel, requests <-chan *ssh.Request, session *sshsessi
 		switch req.Type {
 
 		case "pty-req":
-			// Parse terminal dimensions from the request payload
 			if len(req.Payload) >= 8 {
-				// payload: 4 bytes term name length + name + 4 cols + 4 rows + ...
 				termLen := binary.BigEndian.Uint32(req.Payload[:4])
 				if len(req.Payload) >= int(4+termLen+8) {
 					pty.cols = binary.BigEndian.Uint32(req.Payload[4+termLen:])
@@ -44,7 +42,7 @@ func Handle(channel ssh.Channel, requests <-chan *ssh.Request, session *sshsessi
 
 		case "shell":
 			req.Reply(true, nil)
-			RunRealShell(channel, requests, session, pty) // pass pty + remaining requests
+			RunRealShell(channel, requests, session, pty)
 			return
 
 		default:

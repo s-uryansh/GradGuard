@@ -1,0 +1,1 @@
+# When session ends, serializes everything => verdict, duration, command count, final score category breakdown, flagged commands to logs folder.
