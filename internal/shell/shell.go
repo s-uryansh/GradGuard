@@ -5,9 +5,11 @@ import (
 	sshsession "GradGuard/internal/Session"
 	"GradGuard/internal/analyzer"
 	"GradGuard/internal/detector"
+	"GradGuard/internal/ml"
 	"encoding/binary"
 	"fmt"
 	"io"
+	"log"
 	"os/exec"
 
 	"golang.org/x/crypto/ssh"
@@ -82,5 +84,8 @@ func RunRealShell(
 
 	cmd.Wait()
 	analyzer.WriteReport(session)
+	if err := ml.Ingest(session.ID); err != nil {
+		log.Printf("feedback ingest failed for %s: %v", session.ID, err)
+	}
 	logger.LogCommand(session.ID, session.RemoteAddr, "[session-ended]", 0, session.CommandCount, "unknown", session.SuspicionScore, "session ended")
 }

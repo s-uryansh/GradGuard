@@ -38,7 +38,6 @@ func LoadExternalDataset() []LabeledSample {
 		counts[e.Label]++
 	}
 
-	// top up fingerprinting + exploit with synthetic (not in external data)
 	maxCount := 0
 	for _, c := range counts {
 		if c > maxCount {
