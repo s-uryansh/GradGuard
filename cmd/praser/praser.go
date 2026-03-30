@@ -14,14 +14,12 @@ import (
 	"strings"
 )
 
-// Output format expected by ml.LoadExternalDataset()
 type TrainingSample struct {
 	Features ml.SessionFeatures `json:"features"`
 	Label    int                `json:"label"`
 	Source   string             `json:"source"`
 }
 
-// Cowrie temp struct
 type sessionData struct {
 	CommandCount   int
 	FingerprintCmd int
@@ -35,7 +33,6 @@ func main() {
 	var allSamples []TrainingSample
 	fmt.Println("Starting GradGuard Universal Dataset Parser...")
 
-	// 1. Parse Cowrie JSONs (Command Intent)
 	fmt.Println("[*] Mining Cowrie Logs...")
 	filepath.Walk("Dataset/logs", func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() && strings.Contains(info.Name(), "cowrie.json") {
@@ -45,7 +42,6 @@ func main() {
 		return nil
 	})
 
-	// 2. Parse CIC-IDS-2017 (Timing & Brute Force)
 	fmt.Println("[*] Mining CIC-IDS-2017 CSVs...")
 	filepath.Walk("Dataset/MachineLearningCVE", func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() && strings.HasSuffix(info.Name(), ".csv") {
@@ -55,7 +51,6 @@ func main() {
 		return nil
 	})
 
-	// 3. Parse NSL-KDD (Anomaly Baselines)
 	fmt.Println("[*] Mining NSL-KDD txt files...")
 	filepath.Walk("Dataset/nsl-kdd", func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() && strings.HasSuffix(info.Name(), ".txt") {
@@ -65,7 +60,6 @@ func main() {
 		return nil
 	})
 
-	// 4. Save the Unified Dataset
 	outFile, err := os.Create("Dataset/training_samples.json")
 	if err != nil {
 		fmt.Printf("Failed to create output file: %v\n", err)
@@ -77,12 +71,9 @@ func main() {
 	enc.SetIndent("", "  ")
 	enc.Encode(allSamples)
 
-	fmt.Printf("\n✅ Success! %d unified samples saved to Dataset/training_samples.json\n", len(allSamples))
+	fmt.Printf("\nSuccess! %d unified samples saved to Dataset/training_samples.json\n", len(allSamples))
 }
 
-// ---------------------------------------------------------
-// 1. COWRIE PARSER (Analyzes shell commands)
-// ---------------------------------------------------------
 func parseCowrie(path string) []TrainingSample {
 	var samples []TrainingSample
 	sessions := make(map[string]*sessionData)
@@ -163,9 +154,6 @@ func parseCowrie(path string) []TrainingSample {
 	return samples
 }
 
-// ---------------------------------------------------------
-// 2. CIC-IDS-2017 PARSER (Analyzes network timing flow)
-// ---------------------------------------------------------
 func parseCIC(path string) []TrainingSample {
 	var samples []TrainingSample
 	file, err := os.Open(path)
@@ -180,7 +168,6 @@ func parseCIC(path string) []TrainingSample {
 		return samples
 	}
 
-	// Dynamically map headers
 	idxDur, idxPkts, idxIAT, idxLabel := -1, -1, -1, -1
 	for i, h := range header {
 		cleanH := strings.TrimSpace(h)
@@ -199,7 +186,7 @@ func parseCIC(path string) []TrainingSample {
 	}
 
 	if idxDur == -1 || idxLabel == -1 {
-		return samples // Skip invalid CSVs
+		return samples
 	}
 
 	count := 0
@@ -217,7 +204,7 @@ func parseCIC(path string) []TrainingSample {
 		if strings.Contains(labelStr, "SSH-Patator") {
 			label = ml.LabelBruteForce
 		} else if labelStr != "BENIGN" {
-			continue // Skip other irrelevant attacks for now
+			continue
 		}
 
 		dur, _ := strconv.ParseFloat(record[idxDur], 64)
@@ -225,14 +212,13 @@ func parseCIC(path string) []TrainingSample {
 		iat, _ := strconv.ParseFloat(record[idxIAT], 64)
 
 		features := ml.SessionFeatures{
-			SessionDurationS: dur / 1000000.0, // Microseconds to seconds
+			SessionDurationS: dur / 1000000.0,
 			CommandCount:     pkts,
-			AvgDelayMs:       iat / 1000.0, // Microseconds to MS
+			AvgDelayMs:       iat / 1000.0,
 		}
 
 		samples = append(samples, TrainingSample{Features: features, Label: label, Source: "cic_ids_2017"})
 
-		// Cap to prevent memory bloat (5000 per file)
 		count++
 		if count > 5000 {
 			break
@@ -241,9 +227,6 @@ func parseCIC(path string) []TrainingSample {
 	return samples
 }
 
-// ---------------------------------------------------------
-// 3. NSL-KDD PARSER (Analyzes baseline anomalies)
-// ---------------------------------------------------------
 func parseNSL(path string) []TrainingSample {
 	var samples []TrainingSample
 	file, err := os.Open(path)
@@ -264,20 +247,20 @@ func parseNSL(path string) []TrainingSample {
 		}
 
 		dur, _ := strconv.ParseFloat(record[0], 64)
-		pkts, _ := strconv.ParseFloat(record[22], 64) // 'count' proxy for packets
+		pkts, _ := strconv.ParseFloat(record[22], 64)
 
 		labelStr := record[41]
 		label := ml.LabelLegitimate
 		if labelStr == "guess_passwd" {
 			label = ml.LabelBruteForce
 		} else if labelStr != "normal" {
-			continue // Filter out irrelevant data
+			continue
 		}
 
 		features := ml.SessionFeatures{
 			SessionDurationS: dur,
 			CommandCount:     pkts,
-			SuspicionScore:   0, // Baseline normal
+			SuspicionScore:   0,
 		}
 
 		samples = append(samples, TrainingSample{Features: features, Label: label, Source: "nsl_kdd"})
