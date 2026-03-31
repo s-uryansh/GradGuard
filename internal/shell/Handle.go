@@ -3,6 +3,7 @@ package shell
 import (
 	sshsession "GradGuard/internal/Session"
 	"encoding/binary"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -12,6 +13,13 @@ type ptyInfo struct {
 	rows uint32
 }
 
+func (sh *ShellHandler) Write(p []byte) (n int, err error) {
+	// The "Frustration" Logic
+	if sh.session.LatencyDelay > 0 {
+		time.Sleep(sh.session.LatencyDelay)
+	}
+	return sh.channel.Write(p)
+}
 func Handle(channel ssh.Channel, requests <-chan *ssh.Request, session *sshsession.SessionState) {
 	var pty ptyInfo
 

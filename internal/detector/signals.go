@@ -9,6 +9,11 @@ type SignalType string
 type Confidence string
 
 const (
+	LevelWarning  = "warning"
+	LevelHigh     = "high"
+	LevelCritical = "critical"
+)
+const (
 	SignalThreshold SignalType = "threshold_breach"
 	SignalSequence  SignalType = "sequence_detection"
 	SignalTiming    SignalType = "timing_analysis"

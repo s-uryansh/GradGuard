@@ -15,6 +15,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+type ShellHandler struct {
+	channel ssh.Channel
+	session *sshsession.SessionState
+}
+
 func RunRealShell(
 	channel ssh.Channel,
 	requests <-chan *ssh.Request,
@@ -27,9 +32,11 @@ func RunRealShell(
 
 	prep := exec.Command("docker", "run", "-d",
 		"--name", containerName,
-		"--network", "none",
+		"--network", "gradguard-net",
+		"--dns", "172.19.0.1",
 		"--memory", "128m",
 		"--pids-limit", "64",
+		"--cap-add", "SYS_ADMIN",
 		"honeypot-base",
 		"sleep", "infinity",
 	)
@@ -53,10 +60,16 @@ func RunRealShell(
 		"/dev/null",
 	)
 
+	globalModel := ml.NewModel()
+	if err := globalModel.LoadWeights("Dataset/trained_model.bin"); err != nil {
+		fmt.Println("Warning: Failed to load trained_model.bin. ML Escalation disabled.")
+	}
+
 	logWriter := &sessionLogger{
 		sessionID:  session.ID,
 		remoteAddr: session.RemoteAddr,
 		session:    session,
+		model:      globalModel,
 		detector:   detector.New(session),
 	}
 

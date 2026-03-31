@@ -1,17 +1,37 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get update && apt-get install -y \
-    bash \
-    coreutils \
-    net-tools \
-    curl \
-    wget \
-    python3 \
-    vim \
-    bsdutils \
+    bash coreutils net-tools curl wget python3 vim bsdutils kmod procps \
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo 'root:root' | chpasswd
 WORKDIR /root
+
+RUN mkdir -p .ssh && touch .ssh/authorized_keys
+RUN printf "admin@internal.local\nprod-db-01\n" > servers.txt
+RUN mkdir -p scripts docker_configs backups
+RUN touch install.log default_passwords.bak docker-compose.yml
+RUN printf "#!/bin/bash\napt-get update && apt-get upgrade -y\n" > scripts/update.sh && chmod +x scripts/update.sh
+RUN printf "redis:alpine\npostgres:13\n" > docker_configs/images.txt
+RUN dd if=/dev/zero of=backups/db_dump_2026.sql.gz bs=1M count=12 2>/dev/null # Creates a fake 12MB backup file
+
+RUN mkdir -p .cache/pip .config .local/share .gnupg .npm
+RUN touch .sudo_as_admin_successful .wget-hsts .viminfo .mysql_history
+RUN printf "\n# Cloud credentials\nexport AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nexport AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\n" >> .bashrc
+RUN printf "ssh root@10.0.0.2\nmysql -u root -p\n" > .bash_history
+
+# --- PLUG HARDWARE LEAKS (Binary Hijacking via printf) ---
+RUN printf '#!/bin/bash\necho "NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT"\necho "sda      8:0    0   50G  0 disk "\necho "├─sda1   8:1    0 49.9G  0 part /"\necho "└─sda14  8:14   0    4M  0 part "\n' > /bin/lsblk && chmod +x /bin/lsblk
+
+RUN printf '#!/bin/bash\necho "Filesystem      Size  Used Avail Use%% Mounted on"\necho "/dev/sda1        50G   18G   32G  36%% /"\necho "tmpfs           2.0G     0  2.0G   0%% /dev/shm"\n' > /bin/df && chmod +x /bin/df
+
+RUN mv /usr/bin/free /usr/bin/free_real && \
+    printf '#!/bin/bash\necho "               total        used        free      shared  buff/cache   available"\necho "Mem:            3950         920        1100          40        1930        2750"\necho "Swap:              0           0           0"\n' > /usr/bin/free && chmod +x /usr/bin/free
+
+RUN mkdir -p /var/www/html /opt/backup /backup /var/log/nginx /usr/local/bin/scripts
+RUN touch /var/log/nginx/access.log /var/log/nginx/error.log
+RUN printf "DB_PASSWORD=SuperSecretPass123\nAPI_KEY=sk_live_51MzX...\n" > /opt/backup/config.old
+RUN printf '#!/bin/bash\n# Weekly backup script\ntar -czf /backup/$(date +%%F).tar.gz /var/www/html\n' > /usr/local/bin/scripts/backup.sh && chmod +x /usr/local/bin/scripts/backup.sh
+
+RUN printf "sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0\nproc /proc proc rw,nosuid,nodev,noexec,relatime 0 0\nudev /dev devtmpfs rw,nosuid,relatime,size=1975000k,nr_inodes=493750,mode=755 0 0\n/dev/sda1 / ext4 rw,relatime 0 0\n" > /tmp/fake_mounts

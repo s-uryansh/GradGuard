@@ -5,6 +5,7 @@ import (
 	sshsession "GradGuard/internal/Session"
 	"GradGuard/internal/analyzer"
 	"GradGuard/internal/detector"
+	"GradGuard/internal/ml"
 	"bytes"
 	"regexp"
 	"strings"
@@ -20,9 +21,32 @@ type sessionLogger struct {
 	remoteAddr string
 	session    *sshsession.SessionState
 	buf        bytes.Buffer
+	model      *ml.Model
 	detector   *detector.Detector
 }
 
+func (l *sessionLogger) processCommand(cmd string) {
+	result := analyzer.Classify(cmd)
+
+	l.session.UpdateStats(result.SuspicionWeight, string(result.Category), cmd)
+
+	currentFeatures := ml.ExtractFromSession(l.session, 0, false, false)
+
+	prediction := l.model.Predict(currentFeatures)
+
+	if prediction.Intent == "exploit" || prediction.IsAnomaly {
+		l.escalateDeception(l.session.ID)
+	}
+}
+func (l *sessionLogger) escalateDeception(sessionID string) {
+	// If the ML spikes, we move straight to "Critical" deception
+	// This triggers the responses we just built (fake mounts, fake cpu)
+	detector.Execute(sessionID, detector.LevelCritical)
+
+	// PROJECT ADDITION: Frustrate the attacker
+	// Introduce a "Heavy Load" simulation by adding a 500ms delay to the terminal
+	l.session.LatencyDelay = 500 * time.Millisecond
+}
 func (l *sessionLogger) Write(p []byte) (n int, err error) {
 	l.buf.Write(p)
 
@@ -82,7 +106,9 @@ func (l *sessionLogger) Write(p []byte) (n int, err error) {
 			result.Reason,
 		)
 		l.detector.Check(cmd, string(result.Category), delay.Milliseconds())
-
+		if l.model != nil {
+			l.processCommand(cmd)
+		}
 	}
 
 	return len(p), nil

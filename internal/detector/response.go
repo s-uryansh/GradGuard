@@ -28,12 +28,16 @@ func Execute(containerName string, confidence Confidence) string {
 	return "none"
 }
 
-func applyWarningResponse(c string) {
-	dockerExec(c, `mkdir -p /sys/fs/cgroup && `+
-		`echo '0::/init.scope' > /proc/1/cgroup || true`)
+// internal/detector/response.go
 
-	dockerExec(c, `echo '# system environment' > /.dockerenv && `+
-		`echo 'PLATFORM=baremetal' >> /.dockerenv`)
+func applyWarningResponse(c string) {
+	dockerExec(c, `mkdir -p /sys/fs/cgroup && echo '0::/init.scope' > /proc/1/cgroup || true`)
+
+	dockerExec(c, `echo '# system environment' > /.dockerenv && echo 'PLATFORM=baremetal' >> /.dockerenv`)
+
+	dockerExec(c, `mount --bind /tmp/fake_mounts /proc/mounts 2>/dev/null || true`)
+
+	dockerExec(c, `mount --bind /tmp/fake_cpuinfo /proc/cpuinfo 2>/dev/null || true`)
 }
 
 func applyHighResponse(c string) {

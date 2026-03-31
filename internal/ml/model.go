@@ -1,7 +1,9 @@
 package ml
 
 import (
+	"encoding/gob"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -28,6 +30,33 @@ func NewModel() *Model {
 		Intent:     NewNaiveBayesClassifier(),
 		Anomaly:    NewAnomalyDetector(),
 	}
+}
+
+func (m *Model) SaveWeights(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := gob.NewEncoder(file)
+	// We only need to save the mathematical "state"
+	return encoder.Encode(m)
+}
+
+func (m *Model) LoadWeights(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(m)
+	if err == nil {
+		m.Trained = true
+	}
+	return err
 }
 
 func (m *Model) Train() (trainAcc, testAcc float64, cm *ConfusionMatrix) {

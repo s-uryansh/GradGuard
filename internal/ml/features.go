@@ -2,12 +2,12 @@ package ml
 
 import (
 	sshsession "GradGuard/internal/Session"
-	"GradGuard/internal/analyzer"
 	"encoding/json"
 	"math"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type SessionFeatures struct {
@@ -54,34 +54,32 @@ func (f SessionFeatures) ToSlice() []float64 {
 	}
 }
 
+func mapBool(b bool) float64 {
+	if b {
+		return 1.0
+	}
+	return 0.0
+}
+
 func ExtractFromSession(session *sshsession.SessionState, detectionCount int, sequenceDetected, timingDetected bool) SessionFeatures {
 	total := float64(session.CommandCount)
 	if total == 0 {
 		return SessionFeatures{}
 	}
-
-	fp := float64(session.CategoryCounts[string(analyzer.CategoryFingerprint)])
-	rc := float64(session.CategoryCounts[string(analyzer.CategoryRecon)])
-	ex := float64(session.CategoryCounts[string(analyzer.CategoryExploit)])
-
-	seq := 0.0
-	if sequenceDetected {
-		seq = 1.0
-	}
-	tim := 0.0
-	if timingDetected {
-		tim = 1.0
-	}
+	duration := time.Since(session.StartTime).Seconds()
+	avgDelay := (duration * 1000) / total
 
 	return SessionFeatures{
-		FingerprintRatio: fp / total,
-		ReconRatio:       rc / total,
-		ExploitRatio:     ex / total,
+		FingerprintRatio: float64(session.CategoryCounts["fingerprint"]) / total,
+		ReconRatio:       float64(session.CategoryCounts["recon"]) / total,
+		ExploitRatio:     float64(session.CategoryCounts["exploit"]) / total,
 		SuspicionScore:   float64(session.SuspicionScore) / 100.0,
 		CommandCount:     total,
+		SessionDurationS: duration,
+		AvgDelayMs:       avgDelay,
 		DetectionCount:   float64(detectionCount),
-		SequenceDetected: seq,
-		TimingDetected:   tim,
+		SequenceDetected: mapBool(sequenceDetected),
+		TimingDetected:   mapBool(timingDetected),
 	}
 }
 
