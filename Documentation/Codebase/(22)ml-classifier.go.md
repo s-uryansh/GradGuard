@@ -1,1 +1,0 @@
-Logistic regression binary classifier. Trained with gradient descent over 1000 epochs at learning rate 0.01. Positive class = fingerprinting or exploit. Returns a probability score between 0 and 1.

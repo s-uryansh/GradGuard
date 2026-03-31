@@ -1,1 +1,0 @@
-Calls ip-api.com to geolocate the attacker's IP. Returns country, city, ISP, ASN, timezone, coordinates, and flags for proxy/VPN/hosting/mobile. Handles loopback gracefully for local testing.

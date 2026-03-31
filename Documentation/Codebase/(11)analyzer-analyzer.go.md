@@ -1,3 +1,0 @@
-- Adds weight to session's running suspicion score (capped at 100).
-- Increments category counter, append to flagged command list.
-- Also assigns final session label based on score and thresholds and category.

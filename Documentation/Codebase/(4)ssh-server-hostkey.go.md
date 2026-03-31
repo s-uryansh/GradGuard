@@ -1,1 +1,0 @@
-Generates a fresh RSA-2048 host key on every startup. No persistent key means no fingerprint to match across runs.

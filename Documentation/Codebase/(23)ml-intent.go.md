@@ -1,1 +1,0 @@
-Gaussian Naive Bayes multiclass classifier. Trains per-class mean and standard deviation for each of the 12 features. At prediction time computes log-likelihood under each class distribution

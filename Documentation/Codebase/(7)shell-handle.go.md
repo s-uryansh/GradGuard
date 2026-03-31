@@ -1,1 +1,0 @@
-Handles SSH channel requests before the shell starts, negotiates pseudo terminal dimensions, accepts environment variables, window resize events. When a shell request arrives, hands off to RunRealShell.
