@@ -45,7 +45,7 @@ To ensure enterprise-grade accuracy, GradGuard's ML models are pre-trained on ov
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/s-uryansh/GradGuard.git](https://github.com/s-uryansh/GradGuard.git)
+git clone https://github.com/s-uryansh/GradGuard.git
 cd GradGuard
 ```
 
