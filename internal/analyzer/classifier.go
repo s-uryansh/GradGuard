@@ -28,6 +28,7 @@ var fingerprintPatterns = []struct {
 	reason  string
 }{
 	{"/.dockerenv", 40, "checking for docker environment file"},
+	{"lsblk", 25, "listing block devices for VM/container detection"},
 	{"/proc/1/cgroup", 35, "reading cgroup to detect containerization"},
 	{"/proc/self/cgroup", 35, "reading cgroup to detect containerization"},
 	{"/proc/self/status", 20, "reading process status for VM detection"},

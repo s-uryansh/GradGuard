@@ -1,12 +1,13 @@
-.PHONY: install build run clean
+.PHONY: install build run clean generate
 
 install:
-	@echo "Building Honeypot Base Image..."
-	docker build -t honeypot-base .
-	@echo "Creating Isolated Network..."
+	docker build -t honeypot-base -f Dockerfile.base .
 	docker network create --driver bridge --subnet=172.19.0.0/16 gradguard-net || true
 
-build:
+generate:
+	go generate ./internal/monitor
+
+build: generate
 	go build -o gradguard cmd/honeypot/main.go
 
 run: build

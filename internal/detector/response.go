@@ -38,6 +38,13 @@ func applyWarningResponse(c string) {
 	dockerExec(c, `mount --bind /tmp/fake_mounts /proc/mounts 2>/dev/null || true`)
 
 	dockerExec(c, `mount --bind /tmp/fake_cpuinfo /proc/cpuinfo 2>/dev/null || true`)
+	dockerExec(c, `cat > /usr/local/bin/lsblk << 'EOF'
+			#!/bin/bash
+			echo "NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT"
+			echo "sda      8:0    0   50G  0 disk "
+			echo "└─sda1   8:1    0   50G  0 part /"
+			EOF
+			chmod +x /usr/local/bin/lsblk`)
 }
 
 func applyHighResponse(c string) {

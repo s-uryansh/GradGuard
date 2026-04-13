@@ -62,7 +62,7 @@ func RunRealShell(
 
 	globalModel := ml.NewModel()
 	if err := globalModel.LoadWeights("Dataset/trained_model.bin"); err != nil {
-		fmt.Println("Warning: Failed to load trained_model.bin. ML Escalation disabled.")
+		fmt.Println("Warning: Failed to load trained_model.bin.")
 	}
 
 	logWriter := &sessionLogger{

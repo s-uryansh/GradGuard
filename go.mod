@@ -3,6 +3,7 @@ module GradGuard
 go 1.25.1
 
 require (
+	github.com/cilium/ebpf v0.21.0
 	github.com/fatih/color v1.18.0
 	golang.org/x/crypto v0.47.0
 )

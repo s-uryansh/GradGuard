@@ -13,7 +13,6 @@ import (
 )
 
 var ansiEscape = regexp.MustCompile(`(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|\x1B\][^\x07]*\x07|\x1B[()][AB]`)
-
 var promptPattern = regexp.MustCompile(`^[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+:[^#$]*[#$]\s*`)
 
 type sessionLogger struct {
@@ -26,27 +25,18 @@ type sessionLogger struct {
 }
 
 func (l *sessionLogger) processCommand(cmd string) {
-	result := analyzer.Classify(cmd)
-
-	l.session.UpdateStats(result.SuspicionWeight, string(result.Category), cmd)
-
 	currentFeatures := ml.ExtractFromSession(l.session, 0, false, false)
-
 	prediction := l.model.Predict(currentFeatures)
-
 	if prediction.Intent == "exploit" || prediction.IsAnomaly {
 		l.escalateDeception(l.session.ID)
 	}
 }
-func (l *sessionLogger) escalateDeception(sessionID string) {
-	// If the ML spikes, we move straight to "Critical" deception
-	// This triggers the responses we just built (fake mounts, fake cpu)
-	detector.Execute(sessionID, detector.LevelCritical)
 
-	// PROJECT ADDITION: Frustrate the attacker
-	// Introduce a "Heavy Load" simulation by adding a 500ms delay to the terminal
+func (l *sessionLogger) escalateDeception(sessionID string) {
+	detector.Execute(sessionID, detector.LevelCritical)
 	l.session.LatencyDelay = 500 * time.Millisecond
 }
+
 func (l *sessionLogger) Write(p []byte) (n int, err error) {
 	l.buf.Write(p)
 
@@ -57,7 +47,6 @@ func (l *sessionLogger) Write(p []byte) (n int, err error) {
 		}
 
 		raw := string(l.buf.Next(idx + 1))
-
 		clean := ansiEscape.ReplaceAllString(raw, "")
 		clean = strings.ReplaceAll(clean, "\r", "")
 		clean = strings.ReplaceAll(clean, "\x07", "")
@@ -73,7 +62,6 @@ func (l *sessionLogger) Write(p []byte) (n int, err error) {
 		}
 
 		cmd := promptPattern.ReplaceAllString(clean, "")
-
 		cmd = replayBackspaces(cmd)
 		cmd = strings.TrimSpace(cmd)
 
@@ -106,6 +94,7 @@ func (l *sessionLogger) Write(p []byte) (n int, err error) {
 			result.Reason,
 		)
 		l.detector.Check(cmd, string(result.Category), delay.Milliseconds())
+
 		if l.model != nil {
 			l.processCommand(cmd)
 		}
